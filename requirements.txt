@@ -1,0 +1,6 @@
+libev http://software.schmorp.de/pkg/libev.html
+jansson https://github.com/akheron/jansson
+hiredis https://github.com/redis/hiredis
+libcurl https://curl.haxx.se/libcurl/
+openssl https://www.openssl.org/ (apt-get install libssl-dev)
+libsodium https://download.libsodium.org/doc/installation/

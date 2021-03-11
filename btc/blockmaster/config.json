@@ -1,0 +1,44 @@
+{
+    "process": {
+        "file_limit": 1000000,
+        "core_limit": 1000000000
+    },
+    "log": {
+        "path": "/var/log/pool/blockmaster",
+        "flag": "fatal,error,warn,info,debug,trace"
+    },
+    "alert": {
+        "host": "192.168.1.1",
+        "addr": "192.168.1.1:10000"
+    },
+    "svr": {
+        "bind": [
+            "tcp@0.0.0.0:5000",
+            "udp@0.0.0.0:5000"
+        ],
+        "max_pkg_size": 2097152
+    },
+    "cli": "tcp@127.0.0.1:5001",
+    "blockmaster": [
+        "tcp@118.178.226.218:5000"
+    ],
+    "bitpeer": [
+        "tcp@127.0.0.1:5100"
+    ],
+    "coin": {
+        "name": "BTC",
+        "host": "127.0.0.1",
+        "port": 18332,
+        "user": "rpcuser",
+        "pass": "rpcpassword"
+    },
+    "http_svr": {
+        "bind": [
+            "tcp@0.0.0.0:8102"
+        ],
+        "max_pkg_size": 102400
+    },
+    "blockmaster_update_interval": 30,
+    "request_auth": "ac8c55f83a2eab9bb922c242d6fac125941f67e8911557f2",
+    "blockmaster_url": "http://test_pool3.viabtc.com/internal/config/BTC/api/?coin=BTC&dest=blockmaster&filter_self=1"
+}

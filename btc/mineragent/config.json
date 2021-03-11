@@ -1,0 +1,29 @@
+{
+    "process": {
+        "file_limit": 1000000,
+        "core_limit": 1000000000
+    },
+    "log": {
+        "path": "/var/log/pool/mineragent",
+        "flag": "fatal,error,warn,info,debug,trace"
+    },
+    "svr": {
+        "bind": [
+            "tcp@0.0.0.0:6666"
+        ],
+        "max_pkg_size": 10240,
+        "buf_limit": 100
+    },
+    "cli": "tcp@127.0.0.1:9001",
+    "stratum_host": "127.0.0.1",
+    "stratum_port": 3222,
+    "worker_num": 1,
+    "diff_min": 16,
+    "diff_max": 1048576,
+    "diff_default": 1024,
+    "target_time": 4,
+    "retarget_time": 120,
+    "connect_timeout": 600,
+    "broadcast_timeout": 55,
+    "client_max_idle_time": 86400 
+}

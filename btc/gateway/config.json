@@ -1,0 +1,56 @@
+{
+    "process": {
+        "file_limit": 1000000,
+        "core_limit": 1000000000
+    },
+    "log": {
+        "path": "/var/log/pool/gateway",
+        "flag": "fatal,error,warn,info,debug,trace"
+    },
+    "alert": {
+        "host": "192.168.1.1",
+        "addr": "192.168.1.1:10000"
+    },
+    "svr": {
+        "bind": [
+            "tcp@0.0.0.0:3333"
+        ],
+        "max_pkg_size": 10240
+    },
+    "http_svr": {
+        "bind": [
+            "tcp@0.0.0.0:8080"
+        ],
+        "max_pkg_size": 102400
+    },
+    "monitor": {
+        "bind": "tcp@0.0.0.0:7000",
+        "max_pkg_size": 10240
+    },
+    "job": {
+        "name": "jobmaster",
+        "addr": [
+            "tcp@127.0.0.1:6000"
+        ],
+        "max_pkg_size": 10240
+    },
+    "writer": {
+        "name": "writer",
+        "addr": [
+            "udp@127.0.0.1:3000"
+        ],
+        "max_pkg_size": 1048576
+    },
+    "cli": "tcp@127.0.0.1:7001",
+    "coin": "btc",
+    "queue": "/var/log/pool/gateway.dat",
+    "coinbase_message_file": "/data/viabtc_pool_server/btc/gateway/usermsg.json",
+    "worker_id": 100,
+    "worker_num": 2,
+    "diff_min": 16,
+    "diff_max": 16384,
+    "diff_default": 1024,
+    "target_time": 4,
+    "retarget_time": 120,
+    "client_max_idle_time": 86400
+}

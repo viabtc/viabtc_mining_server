@@ -1,0 +1,48 @@
+{
+    "process": {
+        "file_limit": 1000000,
+        "core_limit": 1000000000
+    },
+    "log": {
+        "path": "/var/log/pool/metarelay",
+        "flag": "fatal,error,warn,info,debug,trace"
+    },
+    "alert": {
+        "host": "192.168.1.1",
+        "addr": "192.168.1.1:10000"
+    },
+    "svr": {
+        "bind": [
+            "tcp@0.0.0.0:3200",
+            "udp@0.0.0.0:3200"
+        ],
+        "max_pkg_size": 1048576
+    },
+    "monitor": {
+        "bind": "tcp@0.0.0.0:3300",
+        "max_pkg_size": 10240
+    },
+    "writer": {
+        "name": "writer",
+        "addr": [
+            "tcp@127.0.0.1:3000"
+        ],
+        "max_pkg_size": 1048576
+    },
+    "queue": "/var/log/pool/metarelay1.dat",
+    "spilt": true,
+    "writer2": {
+        "name": "writer",
+        "addr": [
+            "tcp@127.0.0.1:3101"
+        ],
+        "max_pkg_size": 1048576
+    },
+    "queue2": "/var/log/pool/metarelay2.dat",
+    "trust": [
+        "127.0.0.1",
+        "192.168.1.1",
+        "112.74.47.199"
+    ]
+}
+

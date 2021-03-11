@@ -1,0 +1,40 @@
+{
+    "name": "bitpeer",
+    "process": {
+        "file_limit": 1000000,
+        "core_limit": 1000000000
+    },
+    "log": {
+        "path": "/var/log/pool/bitpeer",
+        "flag": "fatal,error,warn,info,debug"
+    },
+    "alert": {
+        "host": "192.168.1.1",
+        "addr": "192.168.1.1:10000"
+    },
+    "svr": {
+        "bind": "tcp@0.0.0.0:5100",
+        "max_pkg_size": 10485760
+    },
+    "cli": "tcp@127.0.0.1:5101",
+    "coin": {
+        "name": "BTC",
+        "host": "127.0.0.1",
+        "port": 18332,
+        "user": "rpcuser",
+        "pass": "rpcpassword"
+    },
+    "http_svr": {
+        "bind": [
+            "tcp@0.0.0.0:8101"
+        ],
+        "max_pkg_size": 102400
+    },
+    "peer_config_path": "peer.json",
+    "reconnect_timeout": 60,
+    "broadcast_limit": 20,
+    "start_string": "f9beb4d9",
+    "jobmaster_update_interval": 30,
+    "request_auth": "ac8c55f83a2eab9bb922c242d6fac125941f67e8911557f2",
+    "jobmaster_url": "http://test_pool3.viabtc.com/internal/config/BTC/api/?coin=BTC&dest=jobmaster"
+}
