@@ -39,5 +39,9 @@ typedef struct coin_rpc {
 coin_rpc *coin_rpc_create(coin_rpc_cfg *cfg);
 void coin_rpc_release(coin_rpc *rpc);
 json_t *coin_rpc_cmd(coin_rpc *rpc, double timeout, const char *method, json_t *params);
+
+json_t *coin_get_json(coin_rpc *rpc, double timeout, const char *path, long *http_code);
+json_t *coin_post(coin_rpc *rpc, double timeout, const char *path, const char *data, long *http_code);
+
 # endif
 

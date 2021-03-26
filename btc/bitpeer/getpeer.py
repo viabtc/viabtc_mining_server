@@ -38,7 +38,7 @@ def main():
                     peers.append(addr)
 
     info = {'peers': peers}
-    print json.dumps(info, indent=4)
+    print(json.dumps(info, indent=4))
 
 if __name__ == '__main__':
     main()

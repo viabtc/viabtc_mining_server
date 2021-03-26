@@ -174,3 +174,117 @@ json_t *coin_rpc_cmd(coin_rpc *rpc, double timeout, const char *method, json_t *
     free(post_data);
     return NULL;
 }
+
+json_t *coin_get_json(coin_rpc *rpc, double timeout, const char *path, long *http_code)
+{
+    coin_daemon_node *curr = rpc->list;
+    while (curr) {
+        sds url = sdsempty();
+        url = sdscatprintf(url, "http://%s:%d/%s", curr->daemon.host, curr->daemon.port, path);
+        sds auth = sdsempty();
+        auth = sdscatprintf(auth, "%s:%s", curr->daemon.user, curr->daemon.pass);
+        sds reply = sdsempty();
+
+        CURL *curl = curl_easy_init();
+        curl_easy_setopt(curl, CURLOPT_URL, url);
+        //some special api need
+        curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        curl_easy_setopt(curl, CURLOPT_USERPWD, auth);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, post_write_callback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &reply);
+        if (timeout > 0) {
+            curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+            curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, (long)(timeout * 1000));
+        }
+
+        sdsfree(url);
+        sdsfree(auth);
+
+        CURLcode ret = curl_easy_perform(curl);
+        if (ret != CURLE_OK) {
+            log_error("rpc curl fail: %d", ret);
+            curl_easy_cleanup(curl);
+            sdsfree(reply);
+            curr = curr->next;
+            continue;
+        }
+        curl_easy_cleanup(curl);
+
+        ret = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE , http_code);
+        if (ret != CURLE_OK) {
+            log_error("get http code fail: %d", ret);
+            sdsfree(reply);
+            curr = curr->next;
+            continue;
+        }
+
+        move_to_front(rpc, curr);
+        json_t *result = json_loads(reply, 0, NULL);
+        if (result == NULL) {
+            log_error("json decode reply fail");
+            sdsfree(reply);
+            curr = curr->next;
+            continue;
+        }
+        return result;
+    }
+    return NULL;
+}
+
+json_t *coin_post(coin_rpc *rpc, double timeout, const char *path, const char *data, long *http_code)
+{
+    coin_daemon_node *curr = rpc->list;
+    while (curr) {
+        sds url = sdsempty();
+        url = sdscatprintf(url, "http://%s:%d/%s", curr->daemon.host, curr->daemon.port, path);
+        sds auth = sdsempty();
+        auth = sdscatprintf(auth, "%s:%s", curr->daemon.user, curr->daemon.pass);
+        sds reply = sdsempty();
+
+        CURL *curl = curl_easy_init();
+        curl_easy_setopt(curl, CURLOPT_URL, url);
+        curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        curl_easy_setopt(curl, CURLOPT_USERPWD, auth);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(data));
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, post_write_callback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &reply);
+        if (timeout > 0) {
+            curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+            curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, (long)(timeout * 1000));
+        }
+
+        sdsfree(url);
+        sdsfree(auth);
+
+        CURLcode ret = curl_easy_perform(curl);
+        if (ret != CURLE_OK) {
+            log_error("rpc curl fail: %d", ret);
+            curl_easy_cleanup(curl);
+            sdsfree(reply);
+            curr = curr->next;
+            continue;
+        }
+        curl_easy_cleanup(curl);
+
+        ret = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE , http_code);
+        if (ret != CURLE_OK) {
+            log_error("get http code fail: %d", ret);
+            sdsfree(reply);
+            curr = curr->next;
+            continue;
+        }
+
+        move_to_front(rpc, curr);
+        json_t *result = json_loads(reply, 0, NULL);
+        if (result == NULL) {
+            log_error("json decode reply fail: %s", reply);
+            sdsfree(reply);
+            curr = curr->next;
+            continue;
+        }
+        return result;
+    }
+    return NULL;
+}
+

@@ -14,7 +14,6 @@ static rpc_clt *listener_clt;
 static nw_svr *worker_svr;
 static nw_cache *worker_cache;
 static nw_timer worker_timer;
-static dict_t *coinbase_message_dict;
 
 uint32_t worker_id;
 static uint32_t miner_id_counter;
@@ -24,8 +23,7 @@ static uint64_t extra_nonce1_counter;
 # define MAX_USER_NAME_LEN          64
 # define MAX_WORKER_NAME_LEN        64
 # define MAX_USER_AGENT_LEN         64
-# define EXTRA_NONCE2_SIZE          4
-# define MAX_COINBASE_MESSAGE_LEN   20
+# define EXTRA_NONCE2_SIZE          8
 //recommended, BIP9 security
 # define VERSION_MASK_DEFAULT       536862720
 
@@ -182,22 +180,10 @@ static int set_difficulty(nw_ses *ses, int difficulty)
     return 0;
 }
 
-static sds get_coinbase_message(char *user)
-{
-    sds key = sdsnew(user);
-    dict_entry *entry = dict_find(coinbase_message_dict, key);
-    sdsfree(key);
-    sds coinbase_message = NULL;
-    if (entry) {
-        coinbase_message = entry->val;
-    }
-    return coinbase_message;
-}
-
 static int send_job(nw_ses *ses, struct job *job, bool clean_job)
 {
     struct client_info *info = ses->privdata;    
-    sds real_coinbase1 = get_real_coinbase1(job, info->user, info->nonce_id, get_coinbase_message(info->user));
+    sds real_coinbase1 = get_real_coinbase1(job, info->user, info->nonce_id);
     sds coinbase1_hex = bin2hex(real_coinbase1, sdslen(real_coinbase1));
 
     json_t *params = json_array();
@@ -509,7 +495,7 @@ static int get_block_head(char *head, struct job *job, struct client_info *info,
     }
 
     sds coinbase;
-    coinbase = get_real_coinbase1(job, info->user, info->nonce_id, get_coinbase_message(info->user));
+    coinbase = get_real_coinbase1(job, info->user, info->nonce_id);
     coinbase = sdscatsds(coinbase, extra_nonce1_bin);
     coinbase = sdscatsds(coinbase, extra_nonce2_bin);
     coinbase = sdscatsds(coinbase, job->coinbase2_bin);
@@ -555,7 +541,7 @@ static int handle_submit(nw_ses *ses, struct client_info *info, json_t *id, json
         return -__LINE__;
     }
     json_t *extra_nonce2 = json_array_get(params, 2);
-    if (!extra_nonce2 || !json_is_string(extra_nonce2) || strlen(json_string_value(extra_nonce2)) != 8) {
+    if (!extra_nonce2 || !json_is_string(extra_nonce2) || strlen(json_string_value(extra_nonce2)) != EXTRA_NONCE2_SIZE * 2) {
         return -__LINE__;
     }
     json_t *ntime = json_array_get(params, 3);
@@ -624,7 +610,7 @@ static int handle_submit(nw_ses *ses, struct client_info *info, json_t *id, json
     send_ok(ses, id);
     info->share_pow += difficulty;
     info->share_valid++;
-    submit_share_v2(info->miner_id, params, info->version_mask, info->version_mask_miner, version_mask, get_coinbase_message(info->user));
+    submit_share(info->miner_id, params, info->version_mask, info->version_mask_miner, version_mask);
 
     if (!info->user_suggest_diff) {
         ret = retarget_on_new_share(info);
@@ -925,40 +911,9 @@ static int init_listener_clt(void)
     return 0;
 }
 
-static uint32_t coinbase_message_dict_hash_func(const void *key)
+int get_extra_nonce_size()
 {
-    return dict_generic_hash_function(key, sdslen((sds)key));
-}
-
-static int coinbase_message_dict_key_compare(const void *key1, const void *key2)
-{
-    return sdscmp((sds)key1, (sds)key2);
-}
-
-static void coinbase_message_dict_key_free(void *key)
-{
-    sdsfree((sds)key);
-}
-
-static void coinbase_message_dict_val_free(void *val)
-{
-    sdsfree((sds)val);
-}
-
-static int init_dict(void)
-{
-    dict_types type;
-    memset(&type, 0, sizeof(type));
-    type.hash_function = coinbase_message_dict_hash_func;
-    type.key_compare = coinbase_message_dict_key_compare;
-    type.key_destructor = coinbase_message_dict_key_free;
-    type.val_destructor = coinbase_message_dict_val_free;
-
-    coinbase_message_dict = dict_create(&type, 1024);
-    if (coinbase_message_dict == NULL)
-        return -__LINE__;
-
-    return 0;
+    return 4 + EXTRA_NONCE2_SIZE;
 }
 
 int broadcast_job(struct job *job, bool clean_job)
@@ -1002,7 +957,7 @@ int broadcast_job(struct job *job, bool clean_job)
     while (curr) {
         struct client_info *info = curr->privdata;
         if (info->authorized) {
-            sds real_coinbase1 = get_real_coinbase1(job, info->user, info->nonce_id, get_coinbase_message(info->user));
+            sds real_coinbase1 = get_real_coinbase1(job, info->user, info->nonce_id);
             sds coinbase1_hex = bin2hex(real_coinbase1, sdslen(real_coinbase1));
 
             sds job_data = sdsempty();
@@ -1100,53 +1055,9 @@ sds get_clients_info(void)
     return s;
 }
 
-sds list_coinbase_message()
-{
-    sds s = sdsempty();
-    s = sdscatprintf(s, "%-20s, %-20s\n", "user", "coinbase_message");
-
-    dict_iterator *iter = dict_get_iterator(coinbase_message_dict);
-    dict_entry *entry;
-    while ((entry = dict_next(iter)) != NULL) {
-        sds coinbase_message = entry->val;
-        sds user = entry->key;
-        s = sdscatprintf(s, "%-20s, %-20s\n", user, coinbase_message);
-    }
-    dict_release_iterator(iter);
-
-    return s;
-}
-
-int load_coinbase_message(json_t *coinbase_message_object) 
-{
-    if (!json_is_object(coinbase_message_object)) {
-        return -__LINE__;
-    }
-
-    dict_clear(coinbase_message_dict);
-    const char *key;
-    json_t *val;
-    json_object_foreach(coinbase_message_object, key, val) {
-        if (is_valid_user(key) && val != NULL && !json_is_null(val) && json_is_string(val)) {
-            if (strlen(json_string_value(val)) <= 0 && strlen(json_string_value(val)) > MAX_COINBASE_MESSAGE_LEN) {
-                continue;
-            }
-            sds coinbase_message = sdsnew(json_string_value(val));
-            log_trace("reload coinbase message, user: %s, message: %s", key, coinbase_message);
-            sds user = sdsnew(key);
-            sdstolower(user);
-            dict_add(coinbase_message_dict, user, coinbase_message);
-        }
-    }
-    return 0;
-}
-
 int init_worker(void)
 {
     int ret;
-    ret = init_dict();
-    if (ret < 0)
-        return ret;
     ret = init_worker_svr();
     if (ret < 0)
         return ret;

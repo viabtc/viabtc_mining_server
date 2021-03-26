@@ -76,10 +76,6 @@ int do_load_config(json_t *root)
         printf("read queue fail: %d\n", ret);
         return -__LINE__;
     }
-    ret = read_cfg_str(root, "coinbase_message_file", &settings.coinbase_message_file, NULL);
-    if (ret < 0) {
-        printf("read coinbase_message_file fail: %d\n", ret);
-    }
     ret = read_cfg_int(root, "worker_id", &settings.worker_id, true, 0);
     if (ret < 0) {
         printf("load worker_id config fail: %d\n", ret);

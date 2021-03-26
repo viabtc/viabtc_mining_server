@@ -48,7 +48,6 @@ struct settings {
 
     char                *coin;
     char                *queue;
-    char                *coinbase_message_file;
     int                 worker_id;
     int                 worker_num;
     int                 diff_min;

@@ -17,8 +17,6 @@ static nw_cache *worker_cache;
 static nw_timer worker_timer;
 static nw_clt *aggregator_clt;
 static dict_t *agent_dict;
-static dict_t *coinbase_message_dict;
-static json_t *coinbase_message_json;
 
 uint32_t worker_id;
 uint64_t subscription_counter;
@@ -29,8 +27,8 @@ uint64_t extra_nonce1_counter;
 # define MAX_USER_AGENT_LEN         64
 # define MAX_EVENT_LEN              64
 # define MAX_SHARE_STATE_SIZE       256
-# define EXTRA_NONCE2_SIZE          4
 # define MAX_COINBASE_MESSAGE_LEN   20
+# define EXTRA_NONCE2_SIZE          8 
 //recommended, BIP9 security
 # define VERSION_MASK_DEFAULT       536862720
 
@@ -338,22 +336,10 @@ static int set_difficulty(nw_ses *ses, int difficulty)
     return 0;
 }
 
-static sds get_coinbase_message(char *user)
-{
-    sds key = sdsnew(user);
-    dict_entry *entry = dict_find(coinbase_message_dict, key);
-    sdsfree(key);
-    sds coinbase_message = NULL;
-    if (entry) {
-        coinbase_message = entry->val;
-    }
-    return coinbase_message;
-}
-
 static int send_job(nw_ses *ses, struct job *job, bool clean_job)
 {
     struct client_info *info = ses->privdata;
-    sds real_coinbase1 = get_real_coinbase1(job, info->user, worker_id, info->nonce_id, get_coinbase_message(info->user));
+    sds real_coinbase1 = get_real_coinbase1(job, info->user, worker_id, info->nonce_id);
     sds coinbase1_hex = bin2hex(real_coinbase1, sdslen(real_coinbase1));
 
     json_t *params = json_array();
@@ -653,7 +639,7 @@ static int handle_authorize(nw_ses *ses, struct client_info *info, json_t *id, j
 static int get_block_head(char *head, sds *coinbase, struct job *job, struct client_info *info,
         const char *extra_nonce2, const char *ntime, const char *nonce, uint32_t version_mask)
 {
-    if (strlen(extra_nonce2) != 8)
+    if (strlen(extra_nonce2) != EXTRA_NONCE2_SIZE * 2)
         return -__LINE__;
     if (strlen(ntime) != 8)
         return -__LINE__;
@@ -667,7 +653,7 @@ static int get_block_head(char *head, sds *coinbase, struct job *job, struct cli
         sdsfree(extra_nonce2_bin);
         return -__LINE__;
     }
-    *coinbase = get_real_coinbase1(job, info->user, worker_id, info->nonce_id, get_coinbase_message(info->user));
+    *coinbase = get_real_coinbase1(job, info->user, worker_id, info->nonce_id);
     *coinbase = sdscatsds(*coinbase, extra_nonce1_bin);
     *coinbase = sdscatsds(*coinbase, extra_nonce2_bin);
     *coinbase = sdscatsds(*coinbase, job->coinbase2_bin);
@@ -680,8 +666,6 @@ static int get_block_head(char *head, sds *coinbase, struct job *job, struct cli
 
     uint32_t intime = strtoul(ntime, NULL, 16);
     uint32_t inonce = strtoul(nonce, NULL, 16);
-    //uint32_t version = job->version;
-    //uint32_t version = (job->version ^ version_mask);
     uint32_t version = (job->version & ~(info->version_mask)) | (version_mask & (info->version_mask));
 
     void *p = head;
@@ -714,7 +698,7 @@ static int handle_submit(nw_ses *ses, struct client_info *info, json_t *id, json
         return -__LINE__;
     }
     json_t *extra_nonce2 = json_array_get(params, 2);
-    if (!extra_nonce2 || !json_is_string(extra_nonce2) || strlen(json_string_value(extra_nonce2)) != 8) {
+    if (!extra_nonce2 || !json_is_string(extra_nonce2) || strlen(json_string_value(extra_nonce2)) != EXTRA_NONCE2_SIZE * 2) {
         return -__LINE__;
     }
     json_t *ntime = json_array_get(params, 3);
@@ -901,22 +885,6 @@ static int handle_agent_subscribe(nw_ses *ses, struct client_info *info, json_t 
     log_debug("connection: %"PRIu64":%s, agent version: %d, agent id: %u", ses->id,
             nw_sock_human_addr(&ses->peer_addr), info->agent_version, info->agent_id);
 
-    if (coinbase_message_json) {
-        json_t *config_object = json_object();
-        json_object_set(config_object, "coinbase", coinbase_message_json);
-
-        json_t *config_params = json_array();
-        json_array_append_new(config_params, config_object);
-
-        json_t *agent_config_json = json_object();
-        json_object_set_new(agent_config_json, "id", json_null());
-        json_object_set_new(agent_config_json, "method", json_string("agent.config"));
-        json_object_set_new(agent_config_json, "params", config_params);
-        send_json(ses, agent_config_json);
-
-        json_decref(agent_config_json);
-    }
-
     struct job *job = get_curr_job();
     if (job == NULL) {
         log_error("get_curr_job fail");
@@ -942,7 +910,7 @@ static int handle_agent_sync(nw_ses *ses, struct client_info *info, json_t *id, 
         return -__LINE__;
     }
     json_t *extra_nonce1 = json_array_get(params, 2);
-    if (!extra_nonce1 || !json_is_string(extra_nonce1) || strlen(json_string_value(extra_nonce1)) != 8) {
+    if (!extra_nonce1 || !json_is_string(extra_nonce1) || strlen(json_string_value(extra_nonce1)) !=  8) {
         return -__LINE__;
     }
     json_t *difficulty = json_array_get(params, 3);
@@ -982,9 +950,9 @@ static int handle_agent_sync(nw_ses *ses, struct client_info *info, json_t *id, 
 }
 
 static int get_block_head_ext(char *head, sds *coinbase, struct job *job, struct client_info *info,
-        struct agent_val *val, const char *extra_nonce2, const char *ntime, const char *nonce, uint32_t version_mask, const char *coinbase_message)
+        struct agent_val *val, const char *extra_nonce2, const char *ntime, const char *nonce, uint32_t version_mask)
 {
-    if (strlen(extra_nonce2) != 8)
+    if (strlen(extra_nonce2) != EXTRA_NONCE2_SIZE * 2)
         return -__LINE__;
     if (strlen(ntime) != 8)
         return -__LINE__;
@@ -999,7 +967,7 @@ static int get_block_head_ext(char *head, sds *coinbase, struct job *job, struct
         return -__LINE__;
     }
 
-    *coinbase = get_real_coinbase1_ext(job, info->user, info->agent_id, val->nonce_id, coinbase_message);
+    *coinbase = get_real_coinbase1_ext(job, info->user, info->agent_id, val->nonce_id, strlen(extra_nonce2) / 2);
     *coinbase = sdscatsds(*coinbase, extra_nonce1_bin);
     *coinbase = sdscatsds(*coinbase, extra_nonce2_bin);
     *coinbase = sdscatsds(*coinbase, job->coinbase2_bin);
@@ -1045,156 +1013,7 @@ static int handle_agent_submit(nw_ses *ses, struct client_info *info, json_t *id
         return -__LINE__;
     }
     json_t *extra_nonce2 = json_array_get(params, 3);
-    if (!extra_nonce2 || !json_is_string(extra_nonce2) || strlen(json_string_value(extra_nonce2)) != 8) {
-        return -__LINE__;
-    }
-    json_t *ntime = json_array_get(params, 4);
-    if (!ntime || !json_is_string(ntime) || strlen(json_string_value(ntime)) != 8) {
-        return -__LINE__;
-    }
-    json_t *nonce = json_array_get(params, 5);
-    if (!nonce || !json_is_string(nonce) || strlen(json_string_value(nonce)) != 8) {
-        return -__LINE__;
-    }
-
-    json_t *coinbase_message_object = json_array_get(params, 6);
-    if (coinbase_message_object && !json_is_string(coinbase_message_object)) {
-        return -__LINE__;  
-    }
-
-    const char * coinbase_message = NULL;
-    if (coinbase_message_object && strlen(json_string_value(coinbase_message_object)) > 0 && strlen(json_string_value(coinbase_message_object)) <= MAX_COINBASE_MESSAGE_LEN){
-        coinbase_message = json_string_value(coinbase_message_object);
-    }
-
-    struct agent_key key;
-    key.agent_id = info->agent_id;
-    key.miner_id = json_integer_value(miner_id);
-    dict_entry *entry = dict_find(agent_dict, &key);
-    if (entry == NULL) {
-        log_error("connection: %"PRIu64":%s, agent_id: %u, miner_id: %u not found",
-                ses->id, nw_sock_human_addr(&ses->peer_addr), key.agent_id, key.miner_id);
-        send_aggreg_key_value("agent_not_found", 1);
-        return -__LINE__;
-    }
-    struct agent_val *val = entry->val;
-    val->last_active_time = current_timestamp();
-
-    if (get_account_info(json_string_value(account), info->user, info->worker) < 0) {
-        log_error("connection: %"PRIu64":%s, invalid account: %s", ses->id,
-                nw_sock_human_addr(&ses->peer_addr), json_string_value(account));
-        return -__LINE__;
-    }
-    struct job *job = find_job(json_string_value(job_id));
-    if (!job) {
-        log_info("connection: %"PRIu64":%s, user: %s, worker: %s, job: %s, error code: %d, message: %s",
-                ses->id, nw_sock_human_addr(&ses->peer_addr), info->user, info->worker, json_string_value(job_id), 21, "Job not found");
-        info->share_error++;
-        val->share_error++;
-        send_aggreg_new_share(info->user, info->worker, 21, 0, 0);
-        return 0;
-    }
-
-    sds coinbase;
-    char block_head[80];
-    int ret = get_block_head_ext(block_head, &coinbase, job, info, val,
-            json_string_value(extra_nonce2), json_string_value(ntime), json_string_value(nonce), 0, coinbase_message);
-    if (ret < 0) {
-        log_error("get_block_head fail: %d, invalid argument", ret);
-        return -__LINE__;
-    }
-
-    char block_hash[32];
-    sha256d(block_head, sizeof(block_head), block_hash);
-    reverse_mem(block_hash, sizeof(block_hash));
-    sds share_hex = bin2hex(block_hash + 24, 8);
-
-    if (is_share_exist(block_hash)) {
-        log_info("connection: %"PRIu64":%s, user: %s, worker: %s, job: %s, Duplicate share: %s",
-                ses->id, nw_sock_human_addr(&ses->peer_addr), info->user, info->worker, json_string_value(job_id), share_hex);
-        sdsfree(share_hex);
-        sdsfree(coinbase);
-        info->share_error++;
-        val->share_error++;
-        send_aggreg_new_share(info->user, info->worker, 22, 0, 0);
-        return 0;
-    }
-
-    double share_diff = get_share_difficulty(block_hash);
-    int difficulty = val->difficulty;
-    if ((share_diff / val->difficulty) < 0.999) {
-        if ((share_diff / val->difficulty_last) < 0.999) {
-            log_info("connection: %"PRIu64":%s user: %s, worker: %s, job: %s, Low difficulty share: %s, difficulty: %f, require difficulty: %d",
-                    ses->id, nw_sock_human_addr(&ses->peer_addr), info->user, info->worker, json_string_value(job_id), share_hex, share_diff, val->difficulty);
-            sdsfree(share_hex);
-            sdsfree(coinbase);
-            info->share_error++;
-            val->share_error++;
-            send_aggreg_new_share(info->user, info->worker, 23, 0, 0);
-            return 0;
-        } else {
-            difficulty = val->difficulty_last;
-        }
-    }
-
-    double goal = difficulty / job->block_diff;
-    log_debug("connection: %"PRIu64":%s, user: %s, worker: %s, job: %s, submit new share: %s, difficulty: %f, require difficulty: %d, block diff: %.4f, share goal: %.16g",
-            ses->id, nw_sock_human_addr(&ses->peer_addr), info->user, info->worker, json_string_value(job_id), share_hex, share_diff, difficulty, job->block_diff, goal);
-    sdsfree(share_hex);
-
-    if (is_valid_main_block(job, block_hash)) {
-        sds hex = bin2hex(block_hash, 32);
-        log_vip("found main block: %s", hex);
-        send_aggreg_new_block(info->user, info->worker, job->name, hex);
-        send_aggreg_key_value("block", 1);
-        ret = on_found_block(job->job_id, "main", job->name, hex, block_head, coinbase);
-        if (ret < 0) {
-            log_error("on_found_block fail: %d", ret);
-        }
-        sdsfree(hex);
-    }
-    for (int i = 0; i < job->aux_count; i++) {
-        if (memcmp(block_hash, job->auxes[i].aux_target, 32) <= 0) {
-            log_vip("found aux block, %s: %s", job->auxes[i].aux_name, job->auxes[i].aux_hash);
-            send_aggreg_new_block(info->user, info->worker, job->auxes[i].aux_name, job->auxes[i].aux_hash);
-            send_aggreg_key_value("block_aux", 1);
-            ret = on_found_block(job->job_id, "aux", job->auxes[i].aux_name, job->auxes[i].aux_hash, block_head, coinbase);
-            if (ret < 0) {
-                log_error("on_found_block fail: %d", ret);
-            }
-        }    
-    }
-    sdsfree(coinbase);
-
-    info->share_pow += difficulty;
-    info->share_valid++;
-    val->share_pow += difficulty;
-    val->share_valid++;
-    send_aggreg_new_share(info->user, info->worker, 0, difficulty, goal);
-
-    return 0;
-}
-
-static int handle_agent_submit_v2(nw_ses *ses, struct client_info *info, json_t *id, json_t *params)
-{
-    if (!info->is_agent) {
-        return 0;
-    }
-
-    json_t *miner_id = json_array_get(params, 0);
-    if (!miner_id || !json_is_integer(miner_id)) {
-        return -__LINE__;
-    }
-    json_t *account = json_array_get(params, 1);
-    if (!account || !json_is_string(account)) {
-        return -__LINE__;
-    }
-    json_t *job_id = json_array_get(params, 2);
-    if (!job_id || !json_is_string(job_id)) {
-        return -__LINE__;
-    }
-    json_t *extra_nonce2 = json_array_get(params, 3);
-    if (!extra_nonce2 || !json_is_string(extra_nonce2) || strlen(json_string_value(extra_nonce2)) != 8) {
+    if (!extra_nonce2 || !json_is_string(extra_nonce2) || strlen(json_string_value(extra_nonce2)) > EXTRA_NONCE2_SIZE * 2) {
         return -__LINE__;
     }
     json_t *ntime = json_array_get(params, 4);
@@ -1239,15 +1058,6 @@ static int handle_agent_submit_v2(nw_ses *ses, struct client_info *info, json_t 
     }
     version_mask = json_integer_value(mask_obj);
 
-    json_t *coinbase_message_object = json_array_get(params, 9);
-    if (coinbase_message_object && !json_is_string(coinbase_message_object)) {
-        return -__LINE__;  
-    }
-    const char * coinbase_message = NULL;
-    if (coinbase_message_object && strlen(json_string_value(coinbase_message_object)) > 0 && strlen(json_string_value(coinbase_message_object)) <= MAX_COINBASE_MESSAGE_LEN){
-        coinbase_message = json_string_value(coinbase_message_object);
-    }
-
     if (get_account_info(json_string_value(account), info->user, info->worker) < 0) {
         log_error("connection: %"PRIu64":%s, invalid account: %s", ses->id,
                 nw_sock_human_addr(&ses->peer_addr), json_string_value(account));
@@ -1277,7 +1087,7 @@ static int handle_agent_submit_v2(nw_ses *ses, struct client_info *info, json_t 
     sds coinbase;
     char block_head[80];
     int ret = get_block_head_ext(block_head, &coinbase, job, info, val,
-            json_string_value(extra_nonce2), json_string_value(ntime), json_string_value(nonce), version_mask, coinbase_message);
+            json_string_value(extra_nonce2), json_string_value(ntime), json_string_value(nonce), version_mask);
     if (ret < 0) {
         log_error("get_block_head fail: %d, invalid argument", ret);
         return -__LINE__;
@@ -1475,8 +1285,6 @@ static void worker_on_recv_pkg(nw_ses *ses, void *data, size_t size)
         ret = handle_agent_sync(ses, info, id, params);
     } else if (strcmp(_method, "agent.submit") == 0) {
         ret = handle_agent_submit(ses, info, id, params);
-    } else if (strcmp(_method, "agent.submit_v2") == 0) {
-        ret = handle_agent_submit_v2(ses, info, id, params);
     } else if (strcmp(_method, "agent.event") == 0) {
         ret = handle_agent_event(ses, info, id, params);
     } else if (strcmp(_method, "agent.status") == 0) {
@@ -1812,40 +1620,9 @@ static int init_agent(void)
     return 0;
 }
 
-static uint32_t coinbase_message_dict_hash_func(const void *key)
+int get_extra_nonce_size()
 {
-    return dict_generic_hash_function(key, sdslen((sds)key));
-}
-
-static int coinbase_message_dict_key_compare(const void *key1, const void *key2)
-{
-    return sdscmp((sds)key1, (sds)key2);
-}
-
-static void coinbase_message_dict_key_free(void *key)
-{
-    sdsfree((sds)key);
-}
-
-static void coinbase_message_dict_val_free(void *val)
-{
-    sdsfree((sds)val);
-}
-
-static int init_dict(void)
-{
-    dict_types type;
-    memset(&type, 0, sizeof(type));
-    type.hash_function = coinbase_message_dict_hash_func;
-    type.key_compare = coinbase_message_dict_key_compare;
-    type.key_destructor = coinbase_message_dict_key_free;
-    type.val_destructor = coinbase_message_dict_val_free;
-
-    coinbase_message_dict = dict_create(&type, 1024);
-    if (coinbase_message_dict == NULL)
-        return -__LINE__;
-
-    return 0;
+    return 4 + EXTRA_NONCE2_SIZE;
 }
 
 int broadcast_job(struct job *job, bool clean_job)
@@ -1889,7 +1666,7 @@ int broadcast_job(struct job *job, bool clean_job)
     while (curr) {
         struct client_info *info = curr->privdata;
         if (info->authorized) {
-            sds real_coinbase1 = get_real_coinbase1(job, info->user, worker_id, info->nonce_id, get_coinbase_message(info->user));
+            sds real_coinbase1 = get_real_coinbase1(job, info->user, worker_id, info->nonce_id);
             sds coinbase1_hex = bin2hex(real_coinbase1, sdslen(real_coinbase1));
 
             sds job_data = sdsempty();
@@ -1991,98 +1768,9 @@ void flush_worker_info(void)
     }
 }
 
-sds list_coinbase_message()
-{
-    sds s = sdsempty();
-    s = sdscatprintf(s, "%-20s, %-20s\n", "user", "coinbase_message");
-
-    dict_iterator *iter = dict_get_iterator(coinbase_message_dict);
-    dict_entry *entry;
-    while ((entry = dict_next(iter)) != NULL) {
-        sds coinbase_message = entry->val;
-        sds user = entry->key;
-        s = sdscatprintf(s, "%-20s, %-20s\n", user, coinbase_message);
-    }
-    dict_release_iterator(iter);
-
-    return s;
-}
-
-int load_coinbase_message(sds filename) 
-{
-    json_error_t error;
-    json_t *coinbase_message_object = json_load_file(filename, 0, &error);
-    if (coinbase_message_object == NULL) {
-        log_error("json_load_file from: %s fail: %s in line: %d", filename, error.text, error.line);
-        return 0;
-    }
-    
-    if (!json_is_object(coinbase_message_object)) {
-        json_decref(coinbase_message_object);
-        return 0;
-    }
-
-    dict_clear(coinbase_message_dict);
-    if (coinbase_message_json) {
-        json_decref(coinbase_message_json);
-    }
-    coinbase_message_json = json_object();
-
-    const char *key;
-    json_t *val;
-    json_object_foreach(coinbase_message_object, key, val) {
-        if (is_valid_user(key) && val != NULL && !json_is_null(val) && json_is_string(val)) {
-            if (strlen(json_string_value(val)) <= 0 && strlen(json_string_value(val)) > MAX_COINBASE_MESSAGE_LEN) {
-                continue;
-            }
-            sds coinbase_message = sdsnew(json_string_value(val));
-            log_trace("reload coinbase message, user: %s, message: %s", key, coinbase_message);
-            sds user = sdsnew(key);
-            sdstolower(user);
-            dict_add(coinbase_message_dict, user, coinbase_message);
-            json_object_set_new(coinbase_message_json, user, json_string(coinbase_message));
-        }
-    }    
-    json_decref(coinbase_message_object);
-
-    if (!worker_svr) 
-        return 0;
-
-    json_t *config_object = json_object();
-    json_object_set(config_object,  "coinbase", coinbase_message_json);
-    json_t *config_params = json_array();
-    json_array_append_new(config_params, config_object);
-
-    json_t *agent_config_json = json_object();
-    json_object_set_new(agent_config_json, "id", json_null());
-    json_object_set_new(agent_config_json, "method", json_string("agent.config"));
-    json_object_set_new(agent_config_json, "params", config_params);
-
-    nw_ses *curr = worker_svr->clt_list_head;
-    while (curr) {
-        struct client_info *info = curr->privdata;
-        if (info->is_agent) {
-            send_json(curr, agent_config_json);
-        }
-        curr = curr->next;
-    }
-    json_decref(agent_config_json);
-
-    return 0;
-}
-
 int init_worker(int id)
 {
     int ret;
-    ret = init_dict();
-    if (ret < 0)
-        return ret;
-    coinbase_message_json = NULL;
-    if (settings.coinbase_message_file) {
-        ret = load_coinbase_message(settings.coinbase_message_file);
-        if (ret < 0)
-            return ret;
-    }
     ret = init_worker_svr(id);
     if (ret < 0)
         return ret;

@@ -11,7 +11,7 @@
 # include "ma_worker.h"
 # include "ma_listener.h"
 
-const char *__process__ = "btc_mineragent";
+const char *__process__ = "mineragent";
 const char *__version__ = "0.1.0";
 nw_timer cron_timer;
 

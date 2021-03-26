@@ -55,8 +55,8 @@ int init_job(void);
 
 struct job *get_curr_job(void);
 struct job *find_job(const char *job_id);
-sds get_real_coinbase1(struct job *job, char *user, uint32_t worker_id, uint32_t nonce_id, const char *coinbase_message);
-sds get_real_coinbase1_ext(struct job *job, char *user, uint32_t agent_id, uint32_t nonce_id, const char *coinbase_message);
+sds get_real_coinbase1(struct job *job, char *user, uint32_t worker_id, uint32_t nonce_id);
+sds get_real_coinbase1_ext(struct job *job, char *user, uint32_t agent_id, uint32_t nonce_id, int extra_nonce_size);
 
 double get_share_difficulty(const char *block_hash);
 bool is_share_exist(const char *block_hash);

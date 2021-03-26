@@ -17,8 +17,7 @@ int broadcast_job(struct job *job, bool clean_job);
 int close_all_connection(void);
 int submit_sync_all(void);
 sds get_clients_info(void);
-sds list_coinbase_message();
-int load_coinbase_message(json_t *coinbase_message_object);
+int get_extra_nonce_size();
 
 # endif
 

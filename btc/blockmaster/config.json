@@ -39,6 +39,6 @@
         "max_pkg_size": 102400
     },
     "blockmaster_update_interval": 30,
-    "request_auth": "ac8c55f83a2eab9bb922c242d6fac125941f67e8911557f2",
-    "blockmaster_url": "http://test_pool3.viabtc.com/internal/config/BTC/api/?coin=BTC&dest=blockmaster&filter_self=1"
+    "request_auth": "xxxxxxxxxxxxxxx",
+    "blockmaster_url": "http://127.0.0.1/blockmaster"
 }

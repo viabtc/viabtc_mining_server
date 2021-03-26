@@ -33,31 +33,11 @@ static sds on_get_coin_name(const char *cmd, int argc, sds *argv)
     return sdscatprintf(reply, "%s\n", settings.coin);
 }
 
-static sds on_load_coinbase_message(const char *cmd, int argc, sds *argv)
-{
-    if (argc != 1) {
-        sds reply = sdsempty();
-        return sdscatprintf(reply, "usage: %s filename\n", cmd);
-    }
-    sds filename = argv[0];
-    int ret = load_coinbase_message(filename);
-    if (ret < 0) {
-        sds reply = sdsempty();
-        return sdscatprintf(reply, "%s failed: %d\n", cmd, ret);
-    }
-    return sdsnew("ok\n");
-}
-
 static sds on_flush_workers(const char *cmd, int argc, sds *argv)
 {
     flush_worker_info();
     return sdsnew("ok\n");
 } 
-
-static sds on_list_coinbase_message(const char *cmd, int argc, sds *argv)
-{
-    return list_coinbase_message();
-}
 
 int init_cli(int id)
 {
@@ -76,8 +56,6 @@ int init_cli(int id)
     cli_svr_add_cmd(svr, "setcoinname", on_set_coin_name);
     cli_svr_add_cmd(svr, "getcoinname", on_get_coin_name);
     cli_svr_add_cmd(svr, "flushworker", on_flush_workers);
-    cli_svr_add_cmd(svr, "listcoinbase", on_list_coinbase_message);
-    cli_svr_add_cmd(svr, "loadcoinbase", on_load_coinbase_message);
 
     return 0;
 }

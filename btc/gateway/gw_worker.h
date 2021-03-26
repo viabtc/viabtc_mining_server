@@ -18,8 +18,7 @@ sds get_clients_info(void);
 json_t *get_clients_info_json();
 void flush_worker_info(void);
 
-int load_coinbase_message(sds filename);
-sds list_coinbase_message();
+int get_extra_nonce_size();
 
 # endif
 

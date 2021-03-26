@@ -15,11 +15,6 @@ static sds on_list_clients(const char *cmd, int argc, sds *argv)
     return get_clients_info();
 }
 
-static sds on_list_coinbase_message(const char *cmd, int argc, sds *argv)
-{
-    return list_coinbase_message();
-}
-
 int init_cli(int id)
 {
     if (settings.cli.addr.family == AF_INET) {
@@ -32,8 +27,7 @@ int init_cli(int id)
     if (svr == NULL) {
         return -__LINE__;
     }
-
-    cli_svr_add_cmd(svr, "listcoinbase", on_list_coinbase_message);
+    
     cli_svr_add_cmd(svr, "list", on_list_clients);
 
     return 0;

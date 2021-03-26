@@ -44,7 +44,6 @@
     "cli": "tcp@127.0.0.1:7001",
     "coin": "btc",
     "queue": "/var/log/pool/gateway.dat",
-    "coinbase_message_file": "/data/viabtc_pool_server/btc/gateway/usermsg.json",
     "worker_id": 100,
     "worker_num": 2,
     "diff_min": 16,

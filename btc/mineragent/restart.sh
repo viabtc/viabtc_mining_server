@@ -1,5 +1,5 @@
 #!/bin/bash
 
-killall -s SIGQUIT btc_mineragent.exe
+killall -s SIGQUIT mineragent.exe
 sleep 1
-./btc_mineragent.exe config.json
+./mineragent.exe config.json
