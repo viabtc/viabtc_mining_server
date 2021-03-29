@@ -967,7 +967,7 @@ static int get_block_head_ext(char *head, sds *coinbase, struct job *job, struct
         return -__LINE__;
     }
 
-    *coinbase = get_real_coinbase1_ext(job, info->user, info->agent_id, val->nonce_id, strlen(extra_nonce2) / 2);
+    *coinbase = get_real_coinbase1_ext(job, info->user, info->agent_id, val->nonce_id);
     *coinbase = sdscatsds(*coinbase, extra_nonce1_bin);
     *coinbase = sdscatsds(*coinbase, extra_nonce2_bin);
     *coinbase = sdscatsds(*coinbase, job->coinbase2_bin);
@@ -990,7 +990,6 @@ static int get_block_head_ext(char *head, sds *coinbase, struct job *job, struct
     pack_uint32_le(&p, &left, intime);
     pack_uint32_le(&p, &left, job->nbits);
     pack_uint32_le(&p, &left, inonce);
-
     return 0;
 }
 

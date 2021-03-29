@@ -586,7 +586,7 @@ sds get_real_coinbase1(struct job *job, char *user, uint32_t worker_id, uint32_t
     return sdsnewlen(coinbase1, sizeof(coinbase1) - left);
 }
 
-sds get_real_coinbase1_ext(struct job *job, char *user, uint32_t agent_id, uint32_t nonce_id, int extra_nonce_size)
+sds get_real_coinbase1_ext(struct job *job, char *user, uint32_t agent_id, uint32_t nonce_id)
 {
     size_t left_size = 100 - 5 - 1 - 19;
     if (sdslen(job->coinbaseaux_bin)) {
@@ -632,6 +632,8 @@ sds get_real_coinbase1_ext(struct job *job, char *user, uint32_t agent_id, uint3
     pack_uint16_le(&p, &left, job->job_id_num);
     pack_uint32_le(&p, &left, agent_id);
     pack_uint32_le(&p, &left, nonce_id);
+
+    int extra_nonce_size = get_extra_nonce_size();
     uint32_t script_real_size = sizeof(script) - left + extra_nonce_size;
 
     char coinbase1[1024];
