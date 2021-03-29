@@ -664,7 +664,7 @@ int submit_share(uint32_t miner_id, json_t *share, uint32_t version_mask_svr, ui
 {
     json_t *message = json_object();
     json_object_set_new(message, "id", json_integer(current_timestamp() * 1000));
-    json_object_set_new(message, "method", json_string("agent.submit_v2"));
+    json_object_set_new(message, "method", json_string("agent.submit"));
 
     json_t *params = json_array();
     json_array_append_new(params, json_integer(miner_id));
