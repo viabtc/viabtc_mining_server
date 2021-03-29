@@ -479,7 +479,7 @@ static int handle_authorize(nw_ses *ses, struct client_info *info, json_t *id, j
 
 static int get_block_head(char *head, struct job *job, struct client_info *info, const char *extra_nonce2, const char *ntime, const char *nonce, uint32_t version_mask)
 {
-    if (strlen(extra_nonce2) != 8)
+    if (strlen(extra_nonce2) != EXTRA_NONCE2_SIZE * 2)
         return -__LINE__;
     if (strlen(ntime) != 8)
         return -__LINE__;
