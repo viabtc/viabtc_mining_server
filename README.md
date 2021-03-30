@@ -56,7 +56,7 @@ newworker
 
 * detail:
   
-  ```
+```
 newblock: {"name": "BTC", "hash": "0000000000000000032aee4bb112977ae8f4fb3614e0df196893285aa9c2adc0", "user": "haiyang", "worker": "example"}, When new block found
 newevent: {"user": "haiyang", "worker": "example", "coin": "BTC", "peer": "47.88.87.29", "event": "connected"}, list of event: connected, disconnected, When new connection connected or disconnected.
 newworker: {"user": "haiyang", "worker": "example", "coin": "BTC"}, When new worker connected.
