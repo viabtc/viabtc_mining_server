@@ -35,9 +35,6 @@ struct settings {
     nw_svr_cfg          monitor;
     rpc_clt_cfg         writer;
     char                *queue;
-    bool                spilt;
-    rpc_clt_cfg         writer2;
-    char                *queue2;
     int                 trust_count;
     char                **trust_list;
 };

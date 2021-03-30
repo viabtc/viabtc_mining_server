@@ -6,7 +6,6 @@
 # include "mr_config.h"
 # include "mr_server.h"
 # include "mr_writer.h"
-# include "mr_writer2.h"
 
 static rpc_svr *svr;
 static nw_svr *monitor_svr;
@@ -17,13 +16,6 @@ static void svr_on_recv_pkg(nw_ses *ses, rpc_pkg *pkg)
     int ret = push_message(pkg);
     if (ret < 0) {
         log_error("push_message fail: %d", ret);
-    }
-
-    if (settings.spilt) {
-        ret = push_message2(pkg);
-        if (ret < 0) {
-            log_error("push_message2 fail: %d", ret);
-        }
     }
 
     rpc_pkg rsp;

@@ -8,7 +8,6 @@
 # include "mr_config.h"
 # include "mr_server.h"
 # include "mr_writer.h"
-# include "mr_writer2.h"
 
 const char *version = "0.1.0";
 nw_timer cron_timer;
@@ -90,12 +89,6 @@ int main(int argc, char *argv[])
     ret = init_writer();
     if (ret < 0) {
         error(EXIT_FAILURE, errno, "init writer fail: %d", ret);
-    }
-    if (settings.spilt) {
-        ret = init_writer2();
-        if (ret < 0) {
-            error(EXIT_FAILURE, errno, "init writer 2 fail: %d", ret);
-        }
     }
 
     nw_timer_set(&cron_timer, 0.1, true, on_cron_check, NULL);

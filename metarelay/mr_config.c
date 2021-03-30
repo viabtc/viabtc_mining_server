@@ -64,23 +64,6 @@ int do_load_config(json_t *root)
         printf("read queue fail: %d\n", ret);
         return -__LINE__;
     }
-    ret = read_cfg_bool(root, "spilt", &settings.spilt, false, false);
-    if (ret < 0) {
-        printf("read spilt fail: %d\n", ret);
-        return -__LINE__;
-    }
-    if (settings.spilt) {
-        ret = load_cfg_rpc_clt(root, "writer2", &settings.writer2);
-        if (ret < 0) {
-            printf("load writer2 config fail: %d\n", ret);
-            return -__LINE__;
-        }
-        ret = read_cfg_str(root, "queue2", &settings.queue2, NULL);
-        if (ret < 0) {
-            printf("read queue2 fail: %d\n", ret);
-            return -__LINE__;
-        }
-    }
     ret = read_trust(root);
     if (ret < 0) {
         printf("load trust config fail: %d\n", ret);
