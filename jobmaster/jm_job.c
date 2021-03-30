@@ -10,7 +10,6 @@
 # include "jm_server.h"
 # include "jm_config.h"
 # include "jm_broadcast.h"
-# include "jm_monitor.h"
 # include "nw_job.h"
 # include "ut_pack.h"
 # include "ut_merkle.h"
@@ -836,7 +835,6 @@ static int update_job_empty(void)
 
     broadcast_curr_job();
     last_update_job = time(NULL);
-    inc_spv_total();
     log_info("broadcast job: %s, target height: %d, main height: %d, outer height: %d, clean: %s",
             job->job_id, job->height, main_coin_height, outer.height, job_dict->used == 1 ? "true" : "false");
 
@@ -897,7 +895,6 @@ static void on_timer(nw_timer *timer, void *privdata)
 
     time_t now = time(NULL);
     if (spv_mining && (now - spv_mining_start) >= settings.spv_mining_timeout) {
-        inc_spv_timeout();
         log_fatal("spv mining timeout");
         req_getblocktemplate(true);
         spv_mining = false;
@@ -954,12 +951,10 @@ static int on_blockcount_update(int blockcount)
         }
         main_coin_height = blockcount;
         spv_mining = false;
-        send_jobmaster_update(blockcount);
         return 0;
     } else if (blockcount != main_coin_height) {
         log_info("main height update to: %d", blockcount);
         main_coin_height = blockcount;
-        send_jobmaster_update(blockcount);
     }
 
     return 0;
@@ -987,7 +982,6 @@ static void on_worker_finish(nw_job_entry *entry)
     } else if (strcmp(method, "submitblock") == 0) {
         if (json_is_null(reply)) {
             log_info("submitblock success");
-            inc_submit_main_success();
         } else {
             const char *error = json_string_value(reply);
             if (error == NULL)
@@ -997,7 +991,6 @@ static void on_worker_finish(nw_job_entry *entry)
             } else {
                 log_fatal("submitblock fail: %s", error);
             }
-            inc_submit_main_error();
         }
     } else if (strcmp(method, "getblocktemplate") == 0) {
         bool clean = json_boolean_value(json_object_get(message, "clean"));

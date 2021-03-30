@@ -8,7 +8,6 @@
 # include "bp_config.h"
 # include "bp_server.h"
 # include "bp_peer.h"
-# include "bp_monitor.h"
 # include "bp_cli.h"
 # include "bp_request.h"
 
@@ -99,10 +98,6 @@ int main(int argc, char *argv[])
     ret = init_server();
     if (ret < 0) {
         error(EXIT_FAILURE, errno, "init server fail: %d", ret);
-    }
-    ret = init_monitor_server();
-    if (ret < 0) {
-        error(EXIT_FAILURE, errno, "init monitor server fail: %d", ret);
     }
     ret = init_request();
     if (ret < 0) {

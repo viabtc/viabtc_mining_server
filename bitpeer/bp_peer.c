@@ -8,7 +8,6 @@
 # include "bp_peer.h"
 # include "ut_pack.h"
 # include "bp_request.h"
-# include "bp_monitor.h"
 
 static coin_rpc *coin;
 static nw_buf_pool *clt_buf_pool;
@@ -625,74 +624,47 @@ static void on_recv_pkg(nw_ses *ses, void *data, size_t size)
     if (strcmp(cmd, "version") == 0) {
         int ret = send_verack(ses);
         if (ret < 0) {
-            inc_p2p_error("version");
             log_error("send_verack fail: %d", ret);
-        } else {
-            inc_p2p_success("version");
         }
     } else if (strcmp(cmd, "verack") == 0) {
         int ret = send_sendheaders(ses);
         if (ret < 0) {
-            inc_p2p_error("verack");
             log_error("send_sendheaders fail: %d", ret);
-        } else {
-            inc_p2p_success("verack");
         }
     } else if (strcmp(cmd, "ping") == 0) {
         int ret = send_pong(ses, payload, payload_size);
         if (ret < 0) {
-            inc_p2p_error("ping");
             log_error("send_pong fail: %d", ret);
-        } else {
-            inc_p2p_success("ping");
         }
     } else if (strcmp(cmd, "sendheaders") == 0) {
         int ret = process_sendheaders(ses);
         if (ret < 0) {
-            inc_p2p_error("sendheaders");
             log_error("process_sendheaders fail: %d", ret);
-        } else {
-            inc_p2p_success("sendheaders");
         }
     } else if (strcmp(cmd, "inv") == 0) {
         int ret = process_inv(ses, payload, payload_size);
         if (ret < 0) {
-            inc_p2p_error("inv");
             log_error("process_inv fail: %d", ret);
-        } else {
-            inc_p2p_success("inv");
         }
     } else if (strcmp(cmd, "headers") == 0) {
         int ret = process_headers(ses, payload, payload_size);
         if (ret < 0) {
-            inc_p2p_error("headers");
             log_error("process_headers fail: %d", ret);
-        } else {
-            inc_p2p_success("headers");
         }
     } else if (strcmp(cmd, "block") == 0) {
         int ret = process_block(ses, payload, payload_size);
         if (ret < 0) {
-            inc_p2p_error("block");
             log_error("process_block fail: %d", ret);
-        } else {
-            inc_p2p_success("block");
         }
     } else if (strcmp(cmd, "getheaders") == 0) {
         int ret = process_getheaders(ses, payload, payload_size);
         if (ret < 0) {
-            inc_p2p_error("getheaders");
             log_error("process_getheaders fail: %d", ret);
-        } else {
-            inc_p2p_success("getheaders");
         }
     } else if (strcmp(cmd, "getdata") == 0) {
         int ret = process_getdata(ses, payload, payload_size);
         if (ret < 0) {
-            inc_p2p_error("getdata");
             log_error("process_getdata fail: %d", ret);
-        } else {
-            inc_p2p_success("getdata");
         }
     }
 }

@@ -43,7 +43,6 @@ struct settings {
 
     int                 blockmaster_count;
     char                **blockmasters;
-    char                *jobmonitor;
     double              blockmaster_timeout;
 
     coin_rpc_cfg        main_coin;

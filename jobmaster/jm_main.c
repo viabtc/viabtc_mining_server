@@ -10,7 +10,6 @@
 # include "jm_rsk.h"
 # include "jm_vcash.h"
 # include "jm_cli.h"
-# include "jm_monitor.h"
 # include "jm_broadcast.h"
 # include "ut_title.h"
 # include "ut_signal.h"
@@ -115,10 +114,6 @@ int main(int argc, char *argv[])
     ret = init_vcash();
     if (ret < 0) {
         error(EXIT_FAILURE, errno, "init vcash fail: %d", ret);
-    }
-    ret = init_monitor();
-    if (ret < 0) {
-        error(EXIT_FAILURE, errno, "init monitor server fail: %d", ret);
     }
     ret = init_job();
     if (ret < 0) {

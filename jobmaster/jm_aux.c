@@ -7,7 +7,6 @@
 # include "jm_aux.h"
 # include "jm_job.h"
 # include "jm_rsk.h"
-# include "jm_monitor.h"
 
 static nw_job *job;
 static nw_timer timer;
@@ -177,10 +176,8 @@ static void on_finish(nw_job_entry *entry)
         json_t *params = json_object_get(message, "params");
         const char *aux_hash = json_string_value(json_array_get(params, 0));
         if (json_is_false(reply)) {
-            inc_submit_aux_error();
             log_fatal("submit aux block fail, name: %s, hash: %s", aux_name, aux_hash);
         } else {
-            inc_submit_aux_success();
             log_info("submit aux block success, name: %s, hash: %s", aux_name, aux_hash);
         } 
     } else if (strcmp(method, "getauxblock") == 0) {

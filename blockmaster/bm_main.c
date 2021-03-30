@@ -11,7 +11,6 @@
 # include "bm_master.h"
 # include "bm_cli.h"
 # include "bm_request.h"
-# include "bm_monitor.h"
 # include "ut_title.h"
 # include "ut_signal.h"
 
@@ -111,10 +110,6 @@ int main(int argc, char *argv[])
     ret = init_block();
     if (ret < 0) {
         error(EXIT_FAILURE, errno, "init block fail: %d", ret);
-    }
-    ret = init_monitor_server();
-    if (ret < 0) {
-        error(EXIT_FAILURE, errno, "init monitor server fail: %d", ret);
     }
     ret = init_request();
     if (ret < 0) {

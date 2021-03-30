@@ -6,7 +6,6 @@
 # include "jm_config.h"
 # include "jm_server.h"
 # include "jm_job.h"
-# include "jm_monitor.h"
 
 static rpc_svr *svr;
 static rpc_clt *brother;
@@ -187,7 +186,6 @@ static int process_cmd_height_update(nw_ses *ses, rpc_pkg *pkg)
         return -__LINE__;
     }
 
-    inc_recv_out_height();
     int ret = on_height_update(height, curtime, nbits, target, prevhash);
     if (ret < 0) {
         log_error("on_height_update fail: %d, height: %d, curtime: %u, nbits: %u, target: %s, prevhash: %s",

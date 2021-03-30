@@ -6,7 +6,6 @@
 # include "nw_job.h"
 # include "jm_vcash.h"
 # include "jm_job.h"
-# include "jm_monitor.h"
 
 static nw_job *job;
 static nw_timer timer;

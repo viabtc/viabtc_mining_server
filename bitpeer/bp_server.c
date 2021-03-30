@@ -6,7 +6,6 @@
 # include "bp_config.h"
 # include "bp_server.h"
 # include "bp_peer.h"
-# include "bp_monitor.h"
 
 static rpc_svr *svr;
 
@@ -18,20 +17,14 @@ static void on_recv_pkg(nw_ses *ses, rpc_pkg *pkg)
         log_info("cmd submit block");
         ret = broadcast_block(pkg->body, pkg->body_size);
         if (ret < 0) {
-            inc_submit_block_error();
             log_error("broadcast_block fail: %d", ret);
-        } else {
-            inc_submit_block_success();
         }
         break;
     case CMD_UPDATE_BLOCK:
         log_info("cmd update block");
         ret = broadcast_header(pkg->body, pkg->body_size);
         if (ret < 0) {
-            inc_update_block_error();
             log_error("broadcast_header fail: %d", ret);
-        } else {
-            inc_update_block_success();
         }
         break;
     default:

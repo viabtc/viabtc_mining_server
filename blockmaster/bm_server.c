@@ -8,7 +8,6 @@
 # include "bm_block.h"
 # include "bm_tx.h"
 # include "nw_state.h"
-# include "bm_monitor.h"
 
 static rpc_svr *svr;
 static nw_state *state;
@@ -187,10 +186,7 @@ static void on_recv_pkg(nw_ses *ses, rpc_pkg *pkg)
         log_info("from: %s, cmd submit block", nw_sock_human_addr(&ses->peer_addr));
         ret = on_cmd_submit_block(pkg);
         if (ret < 0) {
-            inc_submit_block_error();
             log_error("on_cmd_submit_block fail: %d", ret);
-        } else {
-            inc_submit_block_success();
         }
         break;
     case CMD_THIN_BLOCK_SUBMIT:
@@ -198,20 +194,14 @@ static void on_recv_pkg(nw_ses *ses, rpc_pkg *pkg)
         log_info("from: %s, cmd thin block: %u", nw_sock_human_addr(&ses->peer_addr), pkg->command);
         ret = on_cmd_thin_block(ses, pkg);
         if (ret < 0) {
-            inc_thin_block_submit_update_error(pkg->command);
             log_error("on_cmd_thin_block fail: %d", ret);
-        } else {
-            inc_thin_block_submit_update_success(pkg->command);
         }
         break;
     case CMD_THIN_BLOCK_TX:
         log_info("from: %s, cmd thin block tx reply", nw_sock_human_addr(&ses->peer_addr));
         ret = on_cmd_thin_tx(ses, pkg);
         if (ret < 0) {
-            inc_thin_block_tx_error();
             log_error("on_cmd_thin_tx fail: %d", ret);
-        } else {
-            inc_thin_block_tx_success();
         }
         break;
     default:

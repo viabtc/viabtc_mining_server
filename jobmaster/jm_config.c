@@ -166,11 +166,6 @@ int do_load_config(json_t *root)
             return -__LINE__;
         }
     }
-    ret = read_cfg_str(root, "jobmonitor", &settings.jobmonitor, "");
-    if (ret < 0) {
-        printf("read jobmonitor fail: %d\n", ret);
-        return -__LINE__;
-    }
     ret = read_blockmaster(root, "blockmaster");
     if (ret < 0) {
         printf("read blockmaster fail: %d\n", ret);

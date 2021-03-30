@@ -1,7 +1,6 @@
 # include "nw_job.h"
 # include "jm_rsk.h"
 # include "jm_job.h"
-# include "jm_monitor.h"
 
 static nw_job *job;
 static nw_timer timer;
@@ -147,12 +146,10 @@ static void on_finish(nw_job_entry *entry)
         const char *rsk_hash = json_string_value(json_array_get(params, 0));
         json_t *error = json_object_get(reply, "error");
         if (error) {
-            inc_submit_aux_error();
             const char *message = json_string_value(json_object_get(error, "message"));
             int code = json_integer_value(json_object_get(error, "code"));
             log_fatal("submit rsk block fail, hash: %s, code: %d, message: %s", rsk_hash, code, message);
         } else {
-            inc_submit_aux_success();
             const char *blockImportedResult = json_string_value(json_object_get(reply, "blockImportedResult"));
             const char *blockHash = json_string_value(json_object_get(reply, "blockHash"));
             const char *blockIncludedHeight = json_string_value(json_object_get(reply, "blockIncludedHeight"));
