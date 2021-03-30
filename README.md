@@ -15,7 +15,7 @@ viabtc mining server是一个高性能的分布式比特币矿池服务器，我
 * utils: Some basic library, including log, config parse, some data structure and http/websocket/rpc server implementation.
 
 **Modules**
-1. jobmaster，部署在矿池服务器端，可以部署多个
+1. jobmaster，部署在矿池服务器端，连接bitcoin节点
   * 从比特币节点和联合挖矿节点获取挖矿任务，并下发给gateway
   * 接受bitpeer跟poolbench的指令，生成空块任务
   * 如果成功挖到新区块，提交到节点，同时交由blockmaster对外广播
@@ -23,10 +23,10 @@ viabtc mining server是一个高性能的分布式比特币矿池服务器，我
   * 实现了stratum标准协议，jobmaster下发任务后，转发给矿工，接收并验证矿工提交的算力
   * 实现了自定义的代理协议，jobmaster下发任务后，转发给mineragent，接收并验证mineragent的算力
   * 聚合并向metawriter或者metarelay提交算力
-3. mineragent，主要用于拥有大量矿机的矿厂，部署在矿场内部，可有效节约带宽，提升性能
+3. mineragent，主要用于拥有大量矿机的矿场，部署在矿场内部，可有效节约带宽，提升性能
   * 实现了stratum标准协议，向矿工派发任务，接收并验证矿工提交的算力
   * 实现了自定义的代理协议，从gateway接收挖矿任务，并向gateway提交算力
-4. blockmaster, 可以部署任意多个
+4. blockmaster, 连接bitcoin节点及bitpeer
   * 实现了瘦区块功能，加快节点区块同步速度
   * jobmaster收到新挖出的区块后，向多个blockmaster及bitpeer广播，加快区块广播速度
 5. bitpeer，可以理解为一个特殊的bitcoin节点，部署任意多个
@@ -36,7 +36,7 @@ viabtc mining server是一个高性能的分布式比特币矿池服务器，我
 6. poolbench
   * 监控各个矿池的任务更新情况
   * 如果其他矿池的任务的高度进行了更新，提示jobmaster开始挖空块
-7. metawriter，接收gateway提交或者metarelay转发的算力数据，聚合后，写入redis
+7. metawriter，接收gateway提交或者metarelay转发的算力数据，聚合后写入redis
 8. metarelay, 接收gateway提交的算力数据，转发到metawriter
 9. alertcenter: A simple server that writes FATAL level log to redis list so we can send alert emails
 
