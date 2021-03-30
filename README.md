@@ -54,7 +54,7 @@ newevent
 newworker
 ```
 
-* detail:
+* example:
   
 ```
 When new block found
@@ -85,21 +85,26 @@ while True:
 ```
 
 2. Minint data
+
 * key format:
 
 ```
-<coin>:<type>:<user>(:<worker>(:reject))
-```
+<coin>:<t>:<user>(:<worker>(:reject))
 
 coin: btc
-type:
+t:
     s: share count ( count of submit shares)
     p: pow count (pow * 2^32 means how many hash have calculate)
-2) type: hash
-3) key: unix timestamp, integer, multiple of 60, example: 1482252540 , represent the summary of result in that minute.
-4) value: integer
-5) example:
+    g: pow goal, 统计用户算力对于挖出一个区块的贡献值，1表示已经提交能够挖出一个区块的算力
 
+1) type: hash
+2) key: unix timestamp, integer, multiple of 60, example: 1482252540 , represent the summary 3) of result in that minute.
+4) value: integer or float(pow goal)
+```
+
+* example:
+
+```
 btc:s:haiyang  means user haiyang valid submit share count every minute
 btc:s:haiyang:reject means user haiyang invalid submit share count every minute
 btc:p:haiyang means user haiyang valid work every minute
@@ -107,9 +112,13 @@ btc:p:haiyang means user haiyang valid work every minute
 btc:s:haiyang:example  means user haiyang, worker example valid submit share count every minute
 btc:s:haiyang:example:reject means user haiyang, worker example invalid submit share count every minute
 btc:p:haiyang:example means user haiyang, worker example valid work every minute
+```
 
 3. System data
-1. key format:
+
+* key format:
+
+```
 <coin>:<type>:<key>
 
 coin: btc
@@ -117,28 +126,36 @@ type:
     m: monitor data
     mh: monitor data of spec host
 
-2) type: hash
-3) key: unix timestamp, integer
-4) value: integer
-5) example:
+1) type: hash
+2) key: unix timestamp, integer
+3) value: integer
+```
 
+* example:
+  
+```
 btc:m:pow means the hole mining pool work every minute. use this calculate pool hashrate
-btc:mh:47.89.182.198:pow means gate way 47.89.182.198 total work every minute.
+btc:mh:47.89.182.198:pow means gateway 47.89.182.198 total work every minute.
+```
 
-6) important key:
+* important key:
+
+```
 btc:m:pow
 btc:m:share
 btc:m:reject
 btc:m:block
 btc:m:connections
 
-7) set key: monitor:keys is a set of all keys
+set key: monitor:keys is a set of all keys
 use redis command: SMEMBERS monitor:keys  to get all keys
 
-8) set key: <coin>:mk:<key> is a set of all host of special key,
+set key: <coin>:mk:<key> is a set of all host of special key,
 example: SMEMBERS btc:mk:pow
- 2) "192.168.2.17"
- 3) "192.168.2.18"
+1) "192.168.2.17"
+2) "192.168.2.18"
+
+```
 
 ## Compile and Install
 
