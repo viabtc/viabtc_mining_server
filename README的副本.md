@@ -7,14 +7,17 @@ viabtc mining server是一个高性能的分布式比特币矿池服务器，我
 
 ## 代码结构
 **Required systems**
+
 * Redis: 用来保存矿工的算力数据
 
 **Base library**
+
 * network: An event base and high performance network programming library, easily supporting [1000K TCP connections](http://www.kegel.com/c10k.html). Include TCP/UDP/UNIX SOCKET server and client implementation, a simple timer, state machine, thread pool. 
 
 * utils: Some basic library, including log, config parse, some data structure and http/websocket/rpc server implementation.
 
 **Modules**
+
 1. jobmaster，部署在矿池服务器端，连接bitcoin节点
   * 从比特币节点和联合挖矿节点获取挖矿任务，并下发给gateway
   * 接受bitpeer跟poolbench的指令，生成空块任务
@@ -84,7 +87,7 @@ while True:
         continue
 ```
 
-2. Mining data
+2. Minint data
 
 * key format:
 
