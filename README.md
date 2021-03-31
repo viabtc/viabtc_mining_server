@@ -43,7 +43,7 @@ effectively reduce the orphaned block rate of the mining pool.
 9. Alertcenter: A simple server that writes FATAL level log to redis list so we can send alert emails.
 
 
-## Redis数据格式
+## Redis Data Format
 There are 3 type of keys.
 
 1. event
