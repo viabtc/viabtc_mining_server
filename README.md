@@ -4,12 +4,12 @@ made a lot of optimizations for Bitcoin blocks and transaction broadcasting, whi
 effectively reduce the orphaned block rate of the mining pool.
 
 
-# 整体架构
+# Overall Structure
 ![Architecture](https://user-images.githubusercontent.com/36882284/112812184-639f6880-90af-11eb-8c0f-f5168d426848.jpg)
 
 ## 代码结构
 **Required systems**
-* Redis: 用来保存矿工的算力数据
+* Redis: used to save the hashrate data of miners
 
 **Base library**
 * network: An event base and high performance network programming library, easily supporting [1000K TCP connections](http://www.kegel.com/c10k.html). Include TCP/UDP/UNIX SOCKET server and client implementation, a simple timer, state machine, thread pool. 
