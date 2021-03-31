@@ -1,5 +1,7 @@
 # Viabtc Mining Server
-viabtc mining server是一个高性能的分布式比特币矿池服务器，我们对比特币区块及交易广播做了很多优化，能够有效降低矿池的孤块率
+ViaBTC Mining Server is a high-performance distributed Bitcoin mining pool server. We have 
+made a lot of optimizations for Bitcoin blocks and transaction broadcasting, which can 
+effectively reduce the orphaned block rate of the mining pool.
 
 
 # 整体架构
@@ -15,30 +17,30 @@ viabtc mining server是一个高性能的分布式比特币矿池服务器，我
 * utils: Some basic library, including log, config parse, some data structure and http/websocket/rpc server implementation.
 
 **Modules**
-1. jobmaster，部署在矿池服务器端，连接bitcoin节点
-  * 从比特币节点和联合挖矿节点获取挖矿任务，并下发给gateway
-  * 接受bitpeer跟poolbench的指令，生成空块任务
-  * 如果成功挖到新区块，提交到节点，同时交由blockmaster对外广播
-2. gateway，部署在矿池服务器端，可以任意横向扩展
-  * 实现了stratum标准协议，jobmaster下发任务后，转发给矿工，接收并验证矿工提交的算力
-  * 实现了自定义的代理协议，jobmaster下发任务后，转发给mineragent，接收并验证mineragent的算力
-  * 聚合并向metawriter或者metarelay提交算力
-3. mineragent，主要用于拥有大量矿机的矿场，部署在矿场内部，可有效节约带宽，提升性能
-  * 实现了stratum标准协议，向矿工派发任务，接收并验证矿工提交的算力
-  * 实现了自定义的代理协议，从gateway接收挖矿任务，并向gateway提交算力
-4. blockmaster, 连接bitcoin节点及bitpeer
-  * 实现了瘦区块功能，加快节点区块同步速度
-  * jobmaster收到新挖出的区块后，向多个blockmaster及bitpeer广播，加快区块广播速度
-5. bitpeer，可以理解为一个特殊的bitcoin节点，部署任意多个
-  * 实现了bitcoin p2p协议，可以连接多个bitcoin节点
-  * 接受blockmaster的区块提交后向所连接的bitcoin的节点广播区块
-  * 发现所连接的节点的区块更新后，提示jobmaster开始挖空块
-6. poolbench
-  * 监控各个矿池的任务更新情况
-  * 如果其他矿池的任务的高度进行了更新，提示jobmaster开始挖空块
-7. metawriter，接收gateway提交或者metarelay转发的算力数据，聚合后写入redis
-8. metarelay, 接收gateway提交的算力数据，转发到metawriter
-9. alertcenter: A simple server that writes FATAL level log to redis list so we can send alert emails
+1. Jobmaster, deployed on the mining pool server to connect to the Bitcoin node.
+  * Jobmaster obtains mining task from the Bitcoin node and the Merged mining node, and sends it to Gateway.
+  * To accept instructions from Bitpeer and Poolbench, so as to generate empty block task.
+  * If a new block is successfully mined, it will be submitted to the node and broadcast by Blockmaster at the same time.
+2. Gateway, deployed on the mining pool server and can be scaled horizontally.
+  * Implements the stratum protocol. When jobmaster sends the task, Gateway will forward it to miners, accept and verify the hashrate submitted by miners.
+  * Implements a custom proxy protocol. When jobmaster sends the task, gateway will forward it to mineragent, accept and verify the hashrate of mineragent.
+  * Aggregates hashrate and submits it to metawriter or metarelay.
+3. Mineragent, mainly used in mining farms with a huge number of mining machines and deployed in the mining farms, which can effectively save bandwidth and improve performance.
+  * Implements the stratum protocol. It assigns task to miners, receives and verifies the hashrate submitted by miners.
+  * Implements custom proxy protocol, receives mining task from gateway and submits hashrate to gateway.
+4. Blockmaster, connects the bitcoin node and bitpeer
+  * Implements the thin block function and speeds up the synchronization of nodes and blocks.
+  * After receiving the newly mined block, jobmaster will broadcast to multiple blockmaster and bitpeer to accelerate the block broadcasting.
+5. Bitpeer, can be considered as a special bitcoin node, with any number of deployments.
+  * Implements the bitcoin p2p protocol and is connectable to multiple bitcoin nodes.
+  * After accepting blockmaster’s block submission, Bitpeer will broadcast the block to the connected bitcoin node.
+  * When Bitpeer noticed the block update of the connected node, it will prompt jobmaster to start mining empty blocks. 
+6. Poolbench
+  * Monitors the task update status of each mining pool.
+  * If the height of the tasks of other mining pools is updated, it will prompt jobmaster to start mining empty blocks.
+7. Metawriter: Accpets the hashrate data submitted by Gateway or forwarded by Metarelay, and writes to redis after aggregating the data.
+8. Metarelay: Accpets the hashrate data submitted by Gateway and forwards it to Metawriter.
+9. Alertcenter: A simple server that writes FATAL level log to redis list so we can send alert emails.
 
 
 ## Redis数据格式
@@ -95,7 +97,7 @@ coin: btc
 t:
     s: share count ( count of submit shares)
     p: pow count (pow * 2^32 means how many hash have calculate)
-    g: pow goal, 统计用户算力对于挖出一个区块的贡献值，1表示已经提交能够挖出一个区块的算力
+    g: pow goal, counts the contribution of user’s hashrate in mining a block. 1 means that the hashrate that can mine a block has been submitted.
 
 1) type: hash
 2) key: unix timestamp, integer, multiple of 60, example: 1482252540 , represent the summary 3) of result in that minute.
