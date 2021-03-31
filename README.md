@@ -4,10 +4,10 @@ made a lot of optimizations for Bitcoin blocks and transaction broadcasting, whi
 effectively reduce the orphaned block rate of the mining pool.
 
 
-# Overall Structure
+## Overall Structure
 ![Architecture](https://user-images.githubusercontent.com/36882284/112812184-639f6880-90af-11eb-8c0f-f5168d426848.jpg)
 
-## 代码结构
+## Code structure
 **Required systems**
 * Redis: used to save the hashrate data of miners
 
