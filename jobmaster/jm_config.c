@@ -271,6 +271,11 @@ int do_load_config(json_t *root)
         printf("load http svr config fail: %d\n", ret);
         return -__LINE__;
     }
+    ret = read_cfg_bool(root, "segwit_commitment", &settings.segwit_commitment_enabled, false, true);
+    if (ret < 0) {
+        printf("read segwit_commitment fail: %d\n", ret);
+        return -__LINE__;
+    }
 
     return 0;
 }
