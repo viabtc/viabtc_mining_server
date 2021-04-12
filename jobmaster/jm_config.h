@@ -17,6 +17,7 @@
 # include "nw_clt.h"
 # include "nw_timer.h"
 # include "nw_state.h"
+# include "ut_base58.h"
 # include "ut_log.h"
 # include "ut_sds.h"
 # include "ut_cli.h"
@@ -29,6 +30,7 @@
 
 struct coin_recipient {
     sds address;
+    enum address_type addr_type;
     double percent;
 };
 
@@ -47,6 +49,7 @@ struct settings {
 
     coin_rpc_cfg        main_coin;
     sds                 main_coin_recipient;
+    enum address_type   main_coin_recipient_addr_type;
     struct coin_recipient *coin_recipients;
     int                 coin_recipient_count;
     double              coin_recipient_percents;
