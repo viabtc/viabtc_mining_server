@@ -67,6 +67,7 @@ struct settings {
     bool                coinbase_account;
     int                 spv_mining_timeout;
     http_svr_cfg        http_svr;
+    bool                segwit_commitment_enabled;
 };
 
 extern struct settings settings;

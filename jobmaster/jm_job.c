@@ -460,7 +460,10 @@ static int get_main_coin_job(struct job *job, json_t *r)
     left = sizeof(coinbase2);
     pack_uint32_le(&p, &left, 0xffffffffu); // input transaction sequence
 
-    int out_transaction_num = 1 + settings.coin_recipient_count;
+    int out_transaction_num = settings.coin_recipient_count;
+    if (settings.segwit_commitment_enabled) {
+        out_transaction_num++;
+    }
     bool has_main_reward = false;
     if(settings.coin_recipient_percents < 1) {
         has_main_reward = true;
@@ -516,16 +519,19 @@ static int get_main_coin_job(struct job *job, json_t *r)
         sdsfree(hash_bin);
     }
 
-    const char *segwit_commitment = json_string_value(json_object_get(r, "default_witness_commitment"));
-    if (!segwit_commitment)
-        return -__LINE__;
-    sds commitment = hex2bin(segwit_commitment);
-    pack_uint64_le(&p, &left, 0);
-    pack_varint_le(&p, &left, sdslen(commitment));
-    pack_buf(&p, &left, commitment, sdslen(commitment));
+    if (settings.segwit_commitment_enabled) {
+        const char *segwit_commitment = json_string_value(json_object_get(r, "default_witness_commitment"));
+        if (!segwit_commitment)
+            return -__LINE__;
+        sds commitment = hex2bin(segwit_commitment);
+        pack_uint64_le(&p, &left, 0);
+        pack_varint_le(&p, &left, sdslen(commitment));
+        pack_buf(&p, &left, commitment, sdslen(commitment));
+        sdsfree(commitment);
+    }
+
     pack_uint32_le(&p, &left, 0); // locktime
     job->coinbase2 = bin2hex(coinbase2, sizeof(coinbase2) - left);
-    sdsfree(commitment);
 
     return 0;
 }
