@@ -63,7 +63,7 @@ When new block found
 newblock: {"name": "BTC", "hash": "0000000000000000032aee4bb112977ae8f4fb3614e0df196893285aa9c2adc0", "user": "haiyang", "worker": "example"}
 
 list of event: connected, disconnected, When new connection connected or disconnected
-newevent: {"user": "haiyang", "worker": "example", "coin": "BTC", "peer": "47.88.87.29", "event": "connected"}
+newevent: {"user": "haiyang", "worker": "example", "coin": "BTC", "peer": "127.0.0.1", "event": "connected"}
 
 When new worker connected
 newworker: {"user": "haiyang", "worker": "example", "coin": "BTC"}
@@ -137,7 +137,7 @@ type:
   
 ```
 btc:m:pow means the hole mining pool work every minute. use this calculate pool hashrate
-btc:mh:47.89.182.198:pow means gateway 47.89.182.198 total work every minute.
+btc:mh:127.0.0.1:pow means gateway 127.0.0.1 total work every minute.
 ```
 
 * important key:

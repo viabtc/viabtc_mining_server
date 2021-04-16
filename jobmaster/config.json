@@ -85,7 +85,7 @@
         "max_pkg_size": 102400
     },
     "blockmaster_timeout": 60,
-    "jobmonitor": "tcp@47.75.9.243:9000",
+    "jobmonitor": "tcp@127.0.0.1:9000",
     "main_coin_recipient": "15sDLQav35eur1zqjafHhHYZ2xgwf4w874",
     "coin_recipients": [
         {
