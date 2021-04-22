@@ -163,7 +163,7 @@ example: SMEMBERS btc:mk:pow
 
 **Operating system**
 
-Ubuntu 16.04 or Ubuntu 18.04 or Ubuntu 20.04. Not yet tested on other systems.
+Ubuntu 16.04 or Ubuntu 18.04 or Ubuntu 20.04 or Debian 10. Not yet tested on other systems.
 
 **Requirements**
 
