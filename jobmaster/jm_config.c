@@ -36,7 +36,7 @@ int read_vcashcoin(json_t *root, const char *key)
     return load_cfg_coin_rpc_sub(vcash_obj, settings.vcash_coin);
 }
 
-int read_recipient(json_t *root, const char *key, sds *recipient)
+int read_recipient(json_t *root, const char *key, sds *recipient, enum address_type *addr_type)
 {
     char *address;
     int ret = read_cfg_str(root, key, &address, NULL);
@@ -44,7 +44,7 @@ int read_recipient(json_t *root, const char *key, sds *recipient)
         printf("read: %s fail: %d\n", key ,ret);
         return -__LINE__;
     }
-    *recipient = address2sig(address);
+    *recipient = address2sig(address, addr_type);
     if (*recipient == NULL) {
         printf("key: %s, invalid address: %s\n", key, address);
         return -__LINE__;
@@ -76,7 +76,7 @@ int read_recipients(json_t *root, const char *key)
         if(!json_is_real(percent_object))
             return -__LINE__;
 
-        sds address = address2sig(json_string_value(address_object));
+        sds address = address2sig(json_string_value(address_object), &settings.coin_recipients[i].addr_type);
         if(address == NULL)
             return -__LINE__;
         double percent = json_real_value(percent_object);
@@ -181,7 +181,7 @@ int do_load_config(json_t *root)
         printf("load main_coin config fail: %d\n", ret);
         return -__LINE__;
     }
-    ret = read_recipient(root, "main_coin_recipient", &settings.main_coin_recipient);
+    ret = read_recipient(root, "main_coin_recipient", &settings.main_coin_recipient, &settings.main_coin_recipient_addr_type);
     if (ret < 0) {
         printf("read main_coin_recipient fail: %d\n", ret);
         return -__LINE__;

@@ -124,7 +124,7 @@ sds base58_encode(const char *mem, size_t len)
     return result;
 }
 
-sds address2sig(const char *address)
+sds address2sig(const char *address, enum address_type *addr_type_out)
 {
     sds r = base58_decode(address);
 
@@ -137,6 +137,15 @@ sds address2sig(const char *address)
         return NULL;
     }
     sds result = sdsnewlen(r + 1, sdslen(r) - 5);
+
+    unsigned char version = r[0];
+    // check for testnet (0xc4) and mainnet (0x05) p2sh addresses
+    if (version == 0xc4 || version == 0x05) {
+        *addr_type_out = address_type_p2sh;
+    } else {
+        *addr_type_out = address_type_p2pkh;
+    }
+
     sdsfree(r);
     return result;
 }

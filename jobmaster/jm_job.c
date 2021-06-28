@@ -307,16 +307,24 @@ static int get_aux_coin_job(struct job *job)
     return 0;
 }
 
-static int pack_output_transaction(void ** p, size_t * left, sds pubkey, uint64_t reward)
+static int pack_output_transaction(void ** p, size_t * left, sds pubkey, enum address_type addr_type, uint64_t reward)
 {
     pack_uint64_le(p, left, reward); // reward
-    pack_varint_le(p, left, 25); // pubkey script
-    pack_char(p, left, 0x76); // OP_DUP
+    if (addr_type == address_type_p2sh) {
+        pack_varint_le(p, left, 23); // p2sh len
+    } else {
+        pack_varint_le(p, left, 25); // pubkey script len
+        pack_char(p, left, 0x76); // OP_DUP
+    }
     pack_char(p, left, 0xa9); // OP_HASH160
     pack_char(p, left, 0x14); // Push 20 bytes as data
     pack_buf(p, left, pubkey, sdslen(pubkey)); // PubKey hash
-    pack_char(p, left, 0x88); // OP_EQUALVERIFY
-    pack_char(p, left, 0xac); // OP_CHECKSIG
+    if (addr_type == address_type_p2sh) {
+        pack_char(p, left, 0x87); // OP_EQUAL
+    } else {
+        pack_char(p, left, 0x88); // OP_EQUALVERIFY
+        pack_char(p, left, 0xac); // OP_CHECKSIG
+    }
     return 0;
 }
 
@@ -487,12 +495,12 @@ static int get_main_coin_job(struct job *job, json_t *r)
         else
             amount = (uint64_t)floor(coinbasevalue * settings.coin_recipients[i].percent);
         sum += amount;
-        pack_output_transaction(&p, &left, settings.coin_recipients[i].address, amount);
+        pack_output_transaction(&p, &left, settings.coin_recipients[i].address, settings.coin_recipients[i].addr_type, amount);
     }
 
     if(has_main_reward) {
         amount = coinbasevalue - sum;
-        pack_output_transaction(&p, &left, settings.main_coin_recipient, amount);
+        pack_output_transaction(&p, &left, settings.main_coin_recipient, settings.main_coin_recipient_addr_type, amount);
     }
 
     if (job->rsk) {
@@ -613,7 +621,7 @@ static int get_main_coin_job_empty(struct job *job)
         else
             amount = (uint64_t)floor(coinbasevalue * settings.coin_recipients[i].percent);
         sum += amount;
-        pack_output_transaction(&p, &left, settings.coin_recipients[i].address, amount);    
+        pack_output_transaction(&p, &left, settings.coin_recipients[i].address, settings.coin_recipients[i].addr_type, amount);
     }
     if (job->rsk) {
         pack_uint64_le(&p, &left, 0);  // reward
@@ -640,7 +648,7 @@ static int get_main_coin_job_empty(struct job *job)
 
     if(has_main_reward) {
         amount = coinbasevalue - sum;
-        pack_output_transaction(&p, &left, settings.main_coin_recipient, amount);
+        pack_output_transaction(&p, &left, settings.main_coin_recipient, settings.main_coin_recipient_addr_type, amount);
     }
     pack_uint32_le(&p, &left, 0); // locktime
     job->coinbase2 = bin2hex(coinbase2, sizeof(coinbase2) - left);
